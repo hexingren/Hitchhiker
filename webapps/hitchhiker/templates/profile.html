@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker -- Profile {% endblock %}
+
+{% block style %}
+<style>
+  .carousel-inner > .item > img,
+  .carousel-inner > .item > a > img {
+      width: 70%;
+      margin: auto;
+  }
+</style>
+{% load staticfiles %}
+<link href="{% static 'css/hitchhiker.css' %}" rel="stylesheet" type="text/css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="{% static 'js/mainpage.js' %}"></script>
+async defer></script>
+{% endblock %}
+
+{% block header %}
+<ul class="nav navbar-nav">
+    <li ><a href="{% url 'home' %}">Home</a></li>
+    <li class="active"><a href="{% url 'viewProfile' %}?username={{selfProfile.user.username}}">Profile</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Message&nbsp;
+        <span class="badge" id="newMessageCount">{{newMessageCount}}</span></a>
+        <ul class="dropdown-menu">
+          {% for message in selfProfile.messages.all %}
+            {% if message.active == True %}
+              <div>
+                <li role="separator" class="divider"></li>
+                <li class="box">
+                <p>{{message.text}}</p>
+                <button class="btn btn-default btn-xs" onclick="sendIgnoreMessageRequest('{{message.id}}','{{message.sender.user.username}}','{{message.messageType}}','{{message.rideId}}','{{message.rideType}}', this)">Ignore</button>
+                {% if message.messageType == "accept" %}
+                  <button class="btn btn-primary btn-xs" onclick="sendConfirmRideRequest('{{message.sender.user.username}}','{{message.rideId}}','{{message.rideType}}','{{message.id}}', this)">Confirm</button>
+                {% endif %}
+                {% if message.messageType == "friendInvitation" %}
+                  <button class="btn btn-primary btn-xs" onclick="sendConfirmFriendRequest('{{message.id}}', this)">Confirm</button>
+                {% endif %}
+                </li>
+              </div>
+            {% endif %}
+          {% endfor %}
+          </li>
+        </ul>
+      </li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Friends&nbsp;
+        <span class="badge" id="newMessageCount">{{newMessageCount}}</span></a>
+        <ul class="dropdown-menu">
+          {% for friend in profile.friends.all %}
+            <a href="{% url 'viewProfile' %}?username={{friend.user.username}}">
+              <img src="{{friend.pictureUrl}}" class="img-circle" alt="{{friend.fName}} {{friend.lName}}" width="50" height="50">
+              <span>{{friend.fName}} {{friend.lName}}</span>
+            </a>
+        {% endfor %}
+        </ul>
+    </li>
+    <li ><a href="{% url 'logout' %}">Log out</a></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="profile">
+      <h1 class="page-header">A little about me</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <center>
+                <img src="{{profile.pictureUrl}}" class="img-circle" alt="{{profile.fName}} {{profile.lName}}" width="150" height="150">
+                </center>
+                <br>
+                <center>
+                {% if editOption %}
+                  <form action="{% url 'editprofile' %}" method="GET">
+                  <button class="btn btn-default" type="submit" name="Login" value="Edit"> Edit My Profile       </button>
+                  </form>
+                {% else %}
+                  {% if profile not in selfProfile.friends.all %}
+                    <button class="btn btn-default btn-s" onclick="sendAddFriendRequest('{{profile.user.username}}')">Send Invitation</button>
+                  {% endif %}
+                {% endif %}
+                </center>
+            </div>
+            <div class="col-md-8">
+                <table class="table table-striped">
+                <tr>
+                  <th>Full Name:</th>
+                  <td>{{profile.lName}} {{profile.fName}}</td>
+                </tr>
+                <tr>
+                  <th>Age:</th>
+                  <td>{{profile.age}}</td>
+                </tr>
+                <tr>
+                  <th>Email:</th>
+                  <td>{{profile.email}}</td>
+                </tr>
+                <tr>
+                  <th>Short Bio:</th>
+                  <td>{{profile.shortBio}}</td>
+                </tr>
+                </table>
+            </div>
+        </div><br><br>
+    </div>
+    <!-- current ride -->
+    <div class="panel-group">
+      <div class="panel panel-default">
+          <div class="panel-heading">
+            <h4 class="panel-title">
+              <a data-toggle="collapse" href="#collapse1">{{profile}}'s Current Ride</a>
+            </h4>
+          </div>
+          <div id="collapse1" class="panel-collapse collapse">
+              <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="d1">Departure Time</th>
+                        <th class="d2">Starting Point</th>
+                        <th class="d3">Destination</th>
+                        <th class="d4">Type</th>
+                        <th class="d5">Confirm</th>
+                        <!-- this is just for develop -->
+                    </tr>
+                </thead>
+                    
+                <tbody id="passengerList">
+                    {% for passenger in currentPassengerRide %}
+                    <tr>
+                        <td class="d1">{{passenger.rideTimeStr}}</td>
+                        <td class="d2">{{passenger.origin.name}}</td>
+                        <td class="d3">{{passenger.destination.name}}</td>
+                        <td class="d4">Passenger</td>
+                        {% if profile != selfProfile %}
+                        <td class="d5"><button class="btn btn-default btn-s" onclick="sendAcceptRideRequest('{{passenger.profile.user.username}}','{{passenger.id}}','Passenger')">Accept</button>
+                        {% else %}
+                        <td class="d5"><button class="btn btn-default btn-s" onclick="sendCancelRideRequest('{{passenger.id}}', 'Passenger', this)">Cancel</button>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tbody id="driverList">
+                    {% for driver in currentDriverRide %}
+                    <tr>
+                        <td class="d1">{{driver.rideTimeStr}}</td>
+                        <td class="d2">{{driver.origin.name}}</td>
+                        <td class="d3">{{driver.destination.name}}</td>
+                        <td class="d4">Driver</td>
+                        {% if profile != selfProfile %}
+                        <td class="d5"><button class="btn btn-default btn-s" onclick="sendAcceptRideRequest('{{driver.profile.user.username}}','{{driver.id}}','Driver')">Accept</button>
+                        {% else %}
+                        <td class="d5"><button class="btn btn-default btn-s" onclick="sendCancelRideRequest('{{driver.id}}', 'Driver', this)">Cancel</button>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+              </table>
+          </div>
+        </div>
+    </div>
+    <!-- end of current ride -->
+    {% if editOption %}
+      <div class="page-header"><h1>Invite Them!</h1></div>
+      <div class="row">
+        {% for rec in recFriends %}
+          <div class="col-md-2">
+            <a href="{% url 'viewProfile' %}?username={{rec.user.username}}">
+              <img src="{{rec.pictureUrl}}" class="img-circle" alt="{{rec.fName}} {{rec.lName}}" width="100" height="100">
+            </a>
+            <div>{{rec.fName}} {{rec.lName}}</div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="page-header"><h1>Hot Destinations</h1></div>
+      <div class="row">
+        {% for place in hotPlaces %}
+          <div class="col-md-2">
+            <a href="{% url 'viewPlace' %}?gID={{place.gID}}">
+              <img src="{{place.imgUrl}}" class="img-circle" alt="{{place.name}}" width="100" height="100">
+            </a>
+            <div>{{place.name}}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+    
+    <div class="page-header"><h1>{{profile.fName}} {{profile.lName}} been to</h1></div>
+    <div id="myCarousel" class="carousel slide" data-ride="carousel">
+    <!-- Wrapper for slides -->
+      <div class="carousel-inner" role="listbox">
+        <div class="item active">
+          <img src="http://feel-planet.com/wp-content/uploads/2015/05/yellowstone-national-park-usa.jpg" alt="Chania" width="460" height="345">
+          <div class="carousel-caption">
+              <h3>HitchHiker</h3>
+          </div>
+        </div>
+        {% for place in topPlaces.all %}
+          <div class="item">
+            <a href="{% url 'viewPlace' %}?gID={{place.gID}}">
+              <img src="{{place.imgUrl}}" alt="{{place.na}}" width="460" height="345">
+              <div class="carousel-caption">
+                <h3>{{place.name}}</h3>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+      <!-- Left and right controls -->
+      <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+      </a>
+      <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

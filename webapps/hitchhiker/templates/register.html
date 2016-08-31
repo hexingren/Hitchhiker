@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker -- Login {% endblock %}
+{% block style %} <link href="../static/css/signin.css" rel="stylesheet"> {% endblock %}
+
+
+{% block content %}
+	<div class="container">
+
+	<form class="form-signin" id="id_registration" method="post" action="{% url 'register' %}">
+		{% csrf_token %}
+		<h1 class="form-signin-heading">Please sign up</h1>
+		
+		<label for="id_firstname" class="sr-only">First Name</label>
+		<input class="form-control" id="id_firstname" name="firstname" type="text" placeholder="First Name" autofocus><br>
+		<p style="color: red"> {{ form.firstname.errors }}</p>
+		
+		<label for="id_lastname" class="sr-only">Last Name</label>
+		<input class="form-control" id="id_lastname" name="lastname" type="text" placeholder="Last Name" autofocus><br>
+		<p style="color: red"> {{ form.lastname.errors }}</p>
+		
+		<label for="id_email" class="sr-only">Email Address</label>
+		<input class="form-control" id="id_email" name="email" type="email" placeholder="Email Address" required autofocus><br>
+		<p style="color: red"> {{ form.email.errors }}</p>
+		
+		<label for="id_username" class="sr-only">Username</label>
+		<input class="form-control" id="id_username" name="username" type="text" placeholder="Username" required autofocus><br>
+		<p style="color: red"> {{ form.username.errors }}</p>
+		
+		<label for="id_age" class="sr-only">Age</label>
+		<input class="form-control" id="id_age" name="age" type="number" placeholder="Your Age" min="0" max="200" autofocus><br>
+		<p style="color: red"> {{ form.age.errors }}</p>
+		
+		<label for="id_registration" class="sr-only">Bio</label>
+		<textarea class="form-control" id="id_registration" name="bio" placeholder="I'm a" form="id_registration" autofocus></textarea><br>
+		<p style="color: red"> {{ form.bio.errors }}</p>
+		
+		<label for="id_password1" class="sr-only">Your Password</label>
+		<input class="form-control" id="id_password1" name="password1" type="password" placeholder="Your Password" required autofocus>
+		<p style="color: red"> {{ form.password1.errors }}</p>
+		
+		<label for="id_password2" class="sr-only">Confirm Password</label>
+		<input class="form-control" id="id_password2" name="password2" type="password" placeholder="Confirm Password" required autofocus>
+		<p style="color: red"> {{ form.password2.errors }}</p>
+
+		{% for field in form.hidden_fields %}
+		{{field}}
+		{% endfor %}
+		<br>
+		<a href="{% url 'login' %}" class="btn btn-lg btn-danger"> Cancel </a>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<button type="submit" class="btn btn-lg btn-primary" value="Register">Sign up</button>
+		<br><br>
+		{% for error in form.non_field_errors %}
+			<p style="color: red">{{error}}</p>
+		{% endfor %}
+	</form>
+	</div> <!-- /container -->
+{% endblock %}

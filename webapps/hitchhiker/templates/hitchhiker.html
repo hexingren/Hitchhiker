@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker {% endblock %}
+
+{% block style %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+{% load staticfiles %}
+
+<link href="{% static 'css/hitchhiker.css' %}" rel="stylesheet" type="text/css">
+<script src="{% static 'js/mainpage.js' %}"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBCTrA-MUhX0ibMppDDSq91rGC2rkj9fM8&libraries=places&callback=initMap"
+async defer></script>
+
+{% endblock %}
+
+{% block header %}
+<ul class="nav navbar-nav">
+    <li class="active"><a href="{% url 'home' %}">Home</a></li>
+    <li><a href="{% url 'viewProfile' %}?username={{selfProfile.user.username}}">Profile</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Message&nbsp;
+        <span class="badge" id="newMessageCount">{{newMessageCount}}</span></a>
+        <ul class="dropdown-menu">
+          {% for message in selfProfile.messages.all %}
+            {% if message.active == True %}
+              <div>
+                <li role="separator" class="divider"></li>
+                <li class="box">
+                <p>{{message.text}}</p>
+                <button class="btn btn-default btn-xs" onclick="sendIgnoreMessageRequest('{{message.id}}','{{message.sender.user.username}}','{{message.messageType}}','{{message.rideId}}','{{message.rideType}}', this)">Ignore</button>
+                {% if message.messageType == "accept" %}
+                  <button class="btn btn-primary btn-xs" onclick="sendConfirmRideRequest('{{message.sender.user.username}}','{{message.rideId}}','{{message.rideType}}','{{message.id}}', this)">Confirm</button>
+                {% endif %}
+                {% if message.messageType == "friendInvitation" %}
+                  <button class="btn btn-primary btn-xs" onclick="sendConfirmFriendRequest('{{message.id}}', this)">Confirm</button>
+                {% endif %}
+                </li>
+              </div>
+            {% endif %}
+          {% endfor %}
+          </li>
+        </ul>
+      </li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Friends&nbsp;
+        <ul class="dropdown-menu">
+          {% for friend in selfProfile.friends.all %}
+          <div>
+            <li role="separator" class="divider"></li>
+            <li class="box">
+              <a href="{% url 'viewProfile' %}?username={{friend.user.username}}">
+                <img src="{{friend.pictureUrl}}" class="img-circle" alt="{{friend.fName}} {{friend.lName}}" width="50" height="50">
+                <span>{{friend.fName}} {{friend.lName}}</span>
+              </a>
+            </li>
+          </div>
+        {% endfor %}
+        </ul>
+    </li>
+    <li ><a href="{% url 'logout' %}">Log out</a></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+    	<div id= "map"></div>
+    	<input id="originInput" type="text" placeholder="Starting point" style="width:200px; margin:5px; autofocus;" name="startingPoint">
+    	<input id="destinationInput" type="text" placeholder="Destination" style="width:200px; margin:5px; autofocus;" name="destination">
+    	<!-- this button will actually pop out a window for further input -->
+    	<button id="modal" type="button" style="width:80px; margin:5px; autofocus;" data-toggle="modal" data-target="#myModal" onclick="showInput()">post</button>
+
+        <!-- Passengers -->
+        <div class="panel-group">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">
+                  <a data-toggle="collapse" href="#collapse1">Passengers</a>
+                </h4>
+              </div>
+              <div id="collapse1" class="panel-collapse collapse">
+                    <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="col-md-2">Departure Time</th>
+                            <th class="col-md-2">Starting Point</th>
+                            <th class="col-md-2">Destination</th>
+                            <th class="col-md-4">Rider</th>
+                            <th class="col-md-2">Confirm</th>
+                            <!-- this is just for develop -->
+                        </tr>
+                    </thead>
+                        
+                    <tbody id="passengerList">
+                        {% for passenger in passengers %}
+                        <tr>
+                            <td class="d1">{{passenger.rideTimeStr}}</td>
+                            <td class="d2">{{passenger.origin.name}}</td>
+                            <td class="d3">{{passenger.destination.name}}</td>
+                            <td class="d4">
+                            <div class="user">
+                                <a href="{% url 'viewProfile' %}?username={{passenger.profile.user.username}}">
+                                <img src="{{passenger.profile.pictureUrl}}" class="img-circle" alt="{{passenger.profile.fName}} {{passenger.profile.lName}}" width="30" height="30">
+                                <span>{{passenger.profile.fName}} {{passenger.profile.lName}}</span>
+                                </a>
+                                <div class="userInfo">
+                                    <h5>{{passenger.profile.fName}} {{passenger.profile.lName}} says:</h5>
+                                    <!-- add post message here -->
+                                    <p> {{passenger.message}} </p>
+                                </div>
+                            </div>
+                            </td>
+                            <td class="d5"><button onclick="sendAcceptRideRequest('{{passenger.profile.user.username}}','{{passenger.id}}','Passenger')">Accept</button>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+              </div>
+            </div>
+        </div>
+        <!-- Drivers -->
+        <div class="panel-group">
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">
+                  <a data-toggle="collapse" href="#collapse2">Drivers</a>
+                </h4>
+              </div>
+              <div id="collapse2" class="panel-collapse collapse">
+                            <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="col-md-2">Departure Time</th>
+                            <th class="col-md-2">Starting Point</th>
+                            <th class="col-md-2">Destination</th>
+                            <th class="col-md-4">Rider</th>
+                            <th class="col-md-2">Confirm</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driverList">
+                        {% for driver in drivers %}
+                        <tr>
+                            <td class="d1">{{driver.rideTimeStr}}</td>
+                            <td class="d2">{{driver.origin.name}}</td>
+                            <td class="d3">{{driver.destination.name}}</td>
+                            <td class="d4">
+                            <div class="user">
+                                <a href="{% url 'viewProfile' %}?username={{driver.profile.user.username}}">
+                                <img src="{{driver.profile.pictureUrl}}" class="img-circle" alt="{{driver.profile.fName}} {{driver.profile.lName}}" width="30" height="30">
+                                <span>{{driver.profile.fName}} {{driver.profile.lName}}</span>
+                                </a>
+                                <div class="userInfo">
+                                    <h5>{{driver.profile.fName}} {{driver.profile.lName}} says:</h5>
+                                    <!-- add post message here -->
+                                    <p> {{driver.message}}</p>
+                                </div>
+                            </div>
+                            </td>
+                            <td class="d5"><button class="btn btn-default btn-s" onclick="sendAcceptRideRequest('{{driver.profile.user.username}}','{{driver.id}}','Driver')">Accept</button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+    </div> <!-- end of class="container" -->
+	
+	<!-- Modal -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title" id="myModalLabel">Post Ride</h4>
+				</div>
+				<div class="modal-body">
+					
+					<label>Starting Point:</label>
+					<p><span id='startingPoint'></span></p><br>
+					<label>Destination:</label>
+					<p><span id='destination'></span></p><br>
+					<label>Time:</label>
+					<input id="rideTimeInput" type="datetime-local" name="departureTime"><br><br>
+					<label>Type:</label>
+					<select id = "rideTypeSelect">
+					  <option value ="Driver">Driver</option>
+					  <option value ="Passenger">Passenger</option>
+					</select>
+					<br><br>
+					<label for="id_message">Message:</label>
+					<textarea class="form-control" id="id_message" name="message" placeholder="Hey, " autofocus maxlength="255"></textarea><br>
+					
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					<button id="post" type="button" class="btn btn-primary" data-dismiss="modal" onclick="postRide()">Post</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- end of modal -->
+
+	<!-- important for popover, put it at the end -->
+	{% load staticfiles %}
+	<script src="{% static 'js/popoverLoop.js' %}"></script>
+
+{% endblock %}

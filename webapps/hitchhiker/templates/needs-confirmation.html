@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker -- Confirmation needed {% endblock %}
+
+{% block style %}
+{% load staticfiles %}
+<link href="{% static 'css/register-confirm.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="jumbotron">
+	<h1>Please confirm your registration ...</h1>
+	<p>A comfirmation email has been sent to {{email}}. Please click the link in that email to confirm your email address and complete your registration for your hitchhiker.
+	</p>
+</div>
+</div>
+{% endblock %}

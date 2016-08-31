@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker -- Edit Profile {% endblock %}
+
+{% block style %}
+{% load staticfiles %}
+<link href="{% static 'css/jumbotron-narrow.css' %}" rel="stylesheet" type="text/css">
+{% endblock %}
+
+{% block header %}
+<ul class="nav navbar-nav">
+	<li ><a href="{% url 'home' %}">Home</a></li>
+	<li class="active"><a href="{% url 'viewProfile' %}?username={{user.username}}">Profile</a></li>
+	<li ><a href="{% url 'logout' %}">Log out</a></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="jumbotron">
+<form enctype="multipart/form-data" method="post" action="{% url "editprofile" %}">
+<table>
+{{ form }}
+<table>
+{% for field in form.hidden_fields %}
+{{ field }}
+{% endfor %}
+<br>
+<a href="{% url 'viewProfile' %}?username={{user.username}}" class="btn btn-sm btn-danger"> Cancel </a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<button type="submit" class="btn btn-sm btn-primary" name="Save" value="Save"> Save </button>
+{% csrf_token %}
+</form>
+
+{% for error in form.non_field_errors %}
+<p class="errmsg">
+{{error}}
+</p>
+{% endfor %}
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+table.tableSection {
+	display: table;
+	width: 100%;
+}
+
+
+table.tableSection thead, table.tableSection tbody {
+	float: left;
+	width: 100%;
+}
+
+
+table.tableSection tbody {
+	overflow: auto;
+	height: 70px;
+}
+
+
+table.tableSection tr {
+	width: 100%;
+	display: table;
+	text-align: left;
+}
+
+.d1 {
+	width: 15%;
+}
+
+.d2 {
+	width: 35%;
+}
+
+.d3 {
+	width: 35%;
+}
+
+.d4 {
+	width: 7.5%;
+	text-align: center;
+}
+
+.d5 {
+	width: 7.5%;
+	text-align: center;
+}
+
+#wrap .popover {
+	max-width: 50%;
+}
+
+.box {
+	padding:0 5px;
+}
+
+#map {
+	width:100%;
+	height:350px;
+	margin:5px 0; 
+	border:1px solid #000;
+}
+
+.reviewText {
+font: bold 20px "Arial";
+}
+.reviewAuthor {
+font: italic 20px "Arial";
+text-align: right;
+}
+
+/* popover */
+.userInfo {
+	display: none;
+}
+.user {
+	width: 100%;
+}
+.popover{
+	max-width: 100%; /* Max Width of the popover (depending on the container!) */
+}
+
+

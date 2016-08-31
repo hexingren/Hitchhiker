@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker -- Profile {% endblock %}
+
+{% block style %}
+<style>
+  .carousel-inner > .item > img,
+  .carousel-inner > .item > a > img {
+      width: 70%;
+      margin: auto;
+  }
+</style>
+{% load staticfiles %}
+<link href="{% static 'css/hitchhiker.css' %}" rel="stylesheet" type="text/css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="{% static 'js/mainpage.js' %}"></script>
+async defer></script>
+{% endblock %}
+
+{% block header %}
+<ul class="nav navbar-nav">
+    <li ><a href="{% url 'home' %}">Home</a></li>
+    <li><a href="{% url 'viewProfile' %}?username={{selfProfile.user.username}}">Profile</a></li>
+      <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Message&nbsp;
+        <span class="badge" id="newMessageCount">{{newMessageCount}}</span></a>
+        <ul class="dropdown-menu">
+          {% for message in selfProfile.messages.all %}
+            {% if message.active == True %}
+              <div>
+                <li role="separator" class="divider"></li>
+                <li class="box">
+                <p>{{message.text}}</p>
+                <button class="btn btn-default btn-xs" onclick="sendIgnoreMessageRequest('{{message.id}}','{{message.sender.user.username}}','{{message.messageType}}','{{message.rideId}}','{{message.rideType}}', this)">Ignore</button>
+                {% if message.messageType == "accept" %}
+                  <button class="btn btn-primary btn-xs" onclick="sendConfirmRideRequest('{{message.sender.user.username}}','{{message.rideId}}','{{message.rideType}}','{{message.id}}', this)">Confirm</button>
+                {% endif %}
+                {% if message.messageType == "friendInvitation" %}
+                  <button class="btn btn-primary btn-xs" onclick="sendConfirmFriendRequest('{{message.id}}', this)">Confirm</button>
+                {% endif %}
+                </li>
+              </div>
+            {% endif %}
+          {% endfor %}
+          </li>
+        </ul>
+      </li>
+    <li class="dropdown">
+      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Friends&nbsp;
+        <span class="badge" id="newMessageCount">{{newMessageCount}}</span></a>
+        <ul class="dropdown-menu">
+          {% for friend in profile.friends.all %}
+          <div>
+            <a href="{% url 'viewProfile' %}?username={{friend.user.username}}">
+              <img src="{{friend.pictureUrl}}" class="img-circle" alt="{{friend.fName}} {{friend.lName}}" width="50" height="50">
+              <span>{{friend.fName}} {{friend.lName}}</span>
+            </a>
+          </div>
+        {% endfor %}
+        </ul>
+    </li>
+    <li ><a href="{% url 'logout' %}">Log out</a></li>
+</ul>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <h1>{{place.name}}</h1>
+      <img src="{{place.imgUrl}}" class="img-rounded" alt="{{place.name}}" width="500" height="400">
+    </div>
+    <div class="col-md-6">
+      <h1>Reviews:</h1>
+      <ul class="list-groups">
+        {% for review in reviews.all %}
+          <li>
+            <div class="reviewText">{{review.text}}</div>
+            <div class="reviewAuthor">{{review.author}}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <h1>Visitors:</h1>
+  <div class="row">
+    {% for visitor in visitors.all %}
+      <div class="col-md-2">
+        <a href="{% url 'viewProfile' %}?username={{visitor.user.username}}">
+          <img src="{{visitor.pictureUrl}}" class="img-circle" width="150" height="150">
+        <a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

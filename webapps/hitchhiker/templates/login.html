@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %} Hitchhiker -- Login {% endblock %}
+{% block style %} <link href="../static/css/signin.css" rel="stylesheet"> {% endblock %}
+
+{% block content %}
+	<div class="container">
+
+	<form class="form-signin" method="POST" action="{% url 'django.contrib.auth.views.login' %}">
+		{% csrf_token %}
+		
+		<h1 class="form-signin-heading">Please sign in</h1>
+		<label for="id_username" class="sr-only">Username</label>
+		<input class="form-control" id="id_username" name="username" type="text" placeholder="Username" required autofocus><br>
+		<label for="id_password" class="sr-only">Password</label>
+		<input class="form-control" id="id_password" name="password" type="password" placeholder="Password" required autofocus>
+		<div class="checkbox">
+			Don't have an account? 
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{% url 'register' %}">Sign up</a>
+		</div>
+		<button type="submit" name="Login" value="Login" class="btn btn-lg btn-primary btn-block">Sign in</button>
+	</form>
+	
+	{% if form.errors %}
+	<center style="color:red">
+	Incorrect username and password.
+	</center>
+	{% endif %}
+	</div> <!-- /container -->
+{% endblock %}
